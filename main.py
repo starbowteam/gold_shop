@@ -1022,7 +1022,7 @@ async def on_ready():
         await sync_invites(guild)
 
     # Статус
-    await bot.change_presence(activity=disnake.Game(name="Gold Shop"))
+    await bot.change_presence(activity=disnake.Game(name="Основной работник"))
     bot.loop.create_task(send_panel())
 
     # Запускаем фоновые задачи
