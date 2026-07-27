@@ -20,9 +20,8 @@ import sqlite3
 # ПУТИ
 # ----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-os.makedirs(DATA_DIR, exist_ok=True)
-
+DATA_DIR = BASE_DIR  # теперь всё в корне
+os.makedirs(DATA_DIR, exist_ok=True)  # можно оставить, но корень уже существует
 # ----------------------------
 # КОНФИГ
 # ----------------------------
@@ -47,19 +46,19 @@ CONFIG = {
     "GUILD_ID": 1478389663377920163,
 
     "DATA_DIR": DATA_DIR,
-    "MENU_EMBED_PATH": os.path.join(DATA_DIR, "menu_embed.json"),
-    "INFO_TEMPLATE_PATH": os.path.join(DATA_DIR, "info-o-zakaze.json"),
-    "REKV_PATH": os.path.join(DATA_DIR, "rekv.json"),
-    "POLICY_PATH": os.path.join(DATA_DIR, "policy.json"),
+    "MENU_EMBED_PATH": os.path.join(BASE_DIR, "menu_embed.json"),
+    "INFO_TEMPLATE_PATH": os.path.join(BASE_DIR, "info-o-zakaze.json"),
+    "REKV_PATH": os.path.join(BASE_DIR, "rekv.json"),
+    "POLICY_PATH": os.path.join(BASE_DIR, "policy.json"),
 }
 
 # ----------------------------
 # ФАЙЛЫ ДАННЫХ (JSON)
 # ----------------------------
 FILES = {
-    "promo": os.path.join(DATA_DIR, "promo_codes.json"),
-    "used_promo": os.path.join(DATA_DIR, "used_promo.json"),
-    "review_counts": os.path.join(DATA_DIR, "review_counts.json"),
+    "promo": os.path.join(BASE_DIR, "promo_codes.json"),
+    "used_promo": os.path.join(BASE_DIR, "used_promo.json"),
+    "review_counts": os.path.join(BASE_DIR, "review_counts.json"),
 }
 
 # ----------------------------
@@ -78,7 +77,7 @@ bot = commands.Bot(command_prefix='/', intents=intents)
 # ----------------------------
 # БАЗА ДАННЫХ (SQLite)
 # ----------------------------
-db = sqlite3.connect(os.path.join(DATA_DIR, "diamond.db"), check_same_thread=False, timeout=30)
+db = sqlite3.connect(os.path.join(BASE_DIR, "diamond.db"), check_same_thread=False, timeout=30)
 db.row_factory = sqlite3.Row
 db.execute("PRAGMA journal_mode=WAL")
 db.execute("PRAGMA synchronous=NORMAL")
