@@ -1,0 +1,29 @@
+{
+  "embeds": [
+    {
+      "image": {
+        "url": "https://cdn.discordapp.com/attachments/1495258867691688106/1531347417717543093/image.png?ex=6a68e1eb&is=6a67906b&hm=da721ac1fe55540b23ad6b3aade72a9886be794cf22a9661dfe06d59735aad7d&"
+      },
+      "color": 16762714
+    },
+    {
+      "image": {
+        "url": "https://cdn.discordapp.com/attachments/1495258867691688106/1531336878458929253/image.png?ex=6a68d81a&is=6a67869a&hm=fc13f8470d55b5582d47256f729385c2c1d2a570cf9b3226b2b32e8e18c35337&"
+      },
+      "color": 16762714,
+      "title": "Реквизиты для оплаты",
+      "description": "> Выберите удобный вам способ оплаты → оплатите → подтвердите кнопкой \"Оплата\". После - ожидайте <@1168943921171288135>.",
+      "fields": [
+        {
+          "name": "ЮМАНИ",
+          "value": "``` 12204120139434167```"
+        },
+        {
+          "name": "СБП",
+          "value": " ``` 89539080905```"
+        }
+      ]
+    }
+  ],
+  "components": []
+}
