@@ -20,8 +20,8 @@ import sqlite3
 # ПУТИ
 # ----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = BASE_DIR  # теперь всё в корне
-os.makedirs(DATA_DIR, exist_ok=True)  # можно оставить, но корень уже существует
+DATA_DIR = BASE_DIR
+os.makedirs(DATA_DIR, exist_ok=True)
 # ----------------------------
 # КОНФИГ
 # ----------------------------
@@ -113,7 +113,6 @@ CREATE TABLE IF NOT EXISTS settings (
 """)
 db.commit()
 
-# Добавляем колонки, если их нет
 try:
     db.execute("ALTER TABLE invites ADD COLUMN is_bot INTEGER DEFAULT 0")
 except sqlite3.OperationalError:
@@ -234,7 +233,8 @@ class BuyTicketModal(Modal):
         super().__init__(title="Создание тикета", components=components, custom_id="buy_ticket_modal")
 
     async def callback(self, inter: disnake.ModalInteraction):
-
+        # ИЗМЕНЕНО: проверка прав убрана — теперь любой может создать тикет
+        # (оставлен только кулдаун)
         cooldown = getattr(bot, "_ticket_cooldown", {})
         if inter.author.id in cooldown and time.time() - cooldown[inter.author.id] < CONFIG["TICKET_COOLDOWN_SECONDS"]:
             return await inter.response.send_message("⏳ Подождите 5 сек.", ephemeral=True)
@@ -492,10 +492,19 @@ class ConfirmCloseView(View):
     async def confirm(self, button, inter):
         if not has_ticket_manage_roles(inter.author):
             return await inter.response.send_message("⛔ Нет прав", ephemeral=True)
+
         await inter.response.send_message("Тикет удаляется...", ephemeral=True)
         await asyncio.sleep(2)
-        await self.channel.delete()
-        await log_discord("🗑️ Тикет закрыт", f"> **Пользователь:** {inter.author.mention}\n> **Канал:** {self.channel.name}")
+
+        # ДОБАВЛЕНО: обработка ошибки, если канал уже удалён
+        try:
+            await self.channel.delete()
+            await log_discord("🗑️ Тикет закрыт", f"> **Пользователь:** {inter.author.mention}\n> **Канал:** {self.channel.name}")
+        except disnake.NotFound:
+            # Канал уже удалён — просто логируем, но не падаем
+            await log_discord("⚠️ Тикет уже удалён", f"> **Пользователь:** {inter.author.mention}\n> **Канал:** {self.channel.name} (не найден)")
+        except Exception as e:
+            await log_discord("❌ Ошибка при удалении тикета", f"> **Ошибка:** {str(e)}", color=0xff0000)
 
 # ================= ПАНЕЛЬ (широкие кнопки) =================
 class TicketPanelView(View):
@@ -510,6 +519,7 @@ class TicketPanelView(View):
         row=0
     )
     async def buy(self, button, inter):
+        # ИЗМЕНЕНО: проверка прав убрана — теперь любой может нажать и создать тикет
         await inter.response.send_modal(BuyTicketModal())
         await log_discord("🛒 Нажата кнопка Купить", f"> **Пользователь:** {inter.author.mention}")
 
@@ -549,7 +559,6 @@ async def sync_invites(guild: disnake.Guild):
 
 @bot.event
 async def on_member_join(member: disnake.Member):
-    # Автороль
     auto_role = member.guild.get_role(CONFIG["AUTO_ROLE_ID"])
     if auto_role:
         try:
@@ -558,7 +567,6 @@ async def on_member_join(member: disnake.Member):
         except Exception as e:
             await log_discord("❌ Ошибка выдачи автороли", f"> **Пользователь:** {member.mention}\n> **Ошибка:** {e}", color=0xff0000)
 
-    # Отслеживаем инвайт
     guild = member.guild
     snapshot_before = {row["invite_code"]: row for row in db.execute("SELECT * FROM invites_snapshot WHERE guild_id=?", (guild.id,)).fetchall()}
     try:
@@ -920,7 +928,6 @@ async def reactionrole_add(
     emoji: str,
     role: disnake.Role
 ):
-    # Проверка прав
     if not has_admin_roles(inter.author):
         return await inter.send("⛔ У вас нет прав.", ephemeral=True)
 
@@ -1004,7 +1011,6 @@ async def send_panel():
 # ================= ON_READY =================
 @bot.event
 async def on_ready():
-    # Сброс данных при первом запуске (инвайты)
     reset_flag = db.execute("SELECT value FROM settings WHERE key='invites_reset_done'").fetchone()
     if not reset_flag:
         db.execute("DELETE FROM invites")
@@ -1014,15 +1020,12 @@ async def on_ready():
         await log_discord("🔄 Сброс инвайтов", "Старые данные по инвайтам удалены. Начинаем учёт с нуля.", color=0xff6600)
         print("[INFO] Инвайты сброшены.")
 
-    # Синхронизируем снепшоты
     for guild in bot.guilds:
         await sync_invites(guild)
 
-    # Статус
     await bot.change_presence(activity=disnake.Game(name="Основной работник"))
     bot.loop.create_task(send_panel())
 
-    # Запускаем фоновые задачи
     if not review_counter_task.is_running():
         review_counter_task.start()
 
