@@ -234,8 +234,6 @@ class BuyTicketModal(Modal):
         super().__init__(title="Создание тикета", components=components, custom_id="buy_ticket_modal")
 
     async def callback(self, inter: disnake.ModalInteraction):
-        if not has_ticket_view_roles(inter.author):
-            return await inter.response.send_message("⛔ У вас нет прав.", ephemeral=True)
 
         cooldown = getattr(bot, "_ticket_cooldown", {})
         if inter.author.id in cooldown and time.time() - cooldown[inter.author.id] < CONFIG["TICKET_COOLDOWN_SECONDS"]:
